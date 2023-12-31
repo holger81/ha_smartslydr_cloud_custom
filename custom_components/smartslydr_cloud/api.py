@@ -6,6 +6,8 @@ import traceback
 import aiohttp
 
 from marshmallow_dataclass import dataclass  # noqa: D100
+from marshmallow import Schema
+from typing import ClassVar, Type
 
 from .const import LOGGER, BASE_API_URL,DOMAIN
 
@@ -29,6 +31,7 @@ class SmartSlydrDevice:
     position: int
     error: str
     status: str
+    Schema: ClassVar[Type[Schema]] = Schema
 
 class LycheeThingsApiClientError(Exception):
     """Exception to indicate a general API error."""
