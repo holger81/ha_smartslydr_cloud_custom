@@ -1,13 +1,13 @@
 {
+  "domain": "smartslydr_cloud",
+  "name": "Lycheethings SmartSlydr Cloud Custom",
   "codeowners": [
     "@holger81"
   ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/holger81/ha_smartslydr_cloud_custom",
-  "domain": "smartslydr_cloud",
   "iot_class": "cloud_polling",
-  "name": "Lycheethings SmartSlydr Cloud Custom",
   "requirements": [
     "marshmallow-dataclass"
   ],
