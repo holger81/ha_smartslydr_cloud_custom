@@ -1,8 +1,8 @@
 """LycheeThings API Client.
 
- This is a python version of the great work done by
- Jay Basen (https://github.com/jbasen/Crestron-SmartSlydr) to integrate
- Lycheethings SmartSlydr devices into HomeAssistant.
+This is a python version of the great work done by
+Jay Basen (https://github.com/jbasen/Crestron-SmartSlydr) to integrate
+Lycheethings SmartSlydr devices into HomeAssistant.
 
 """
 from __future__ import annotations

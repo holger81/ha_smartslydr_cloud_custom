@@ -1,4 +1,5 @@
 """Constants for smartslydr_cloud."""
+from logging import Logger, getLogger
 
 DOMAIN = "smartslydr_cloud"
 
@@ -16,8 +17,4 @@ CONF_SYNC_INTERVAL = "sync_interval"
 
 DEFAULT_SYNC_INTERVAL = 60  # seconds
 
-
-from logging import Logger, getLogger
-
 LOGGER: Logger = getLogger(__package__)
-

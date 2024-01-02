@@ -1,13 +1,12 @@
 """Adds config flow for SmartSlydr."""
 from __future__ import annotations
-
+from collections import OrderedDict
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.core import callback
-from collections import OrderedDict
 
 from .api import (
     LycheeThingsApiClient,
@@ -34,6 +33,7 @@ class SmartSlydrBaseFlowHandler(config_entries.ConfigFlow):  # noqa: D101
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        """Set Options flow for SmartSlydr Cloud Custom."""
         return SmartSlydrOptionsFlowHandler(config_entry)
 
 class SmartSlydrFlowHandler(SmartSlydrBaseFlowHandler, domain=DOMAIN):
@@ -95,6 +95,8 @@ class SmartSlydrFlowHandler(SmartSlydrBaseFlowHandler, domain=DOMAIN):
 class SmartSlydrOptionsFlowHandler(
     SmartSlydrBaseFlowHandler, config_entries.OptionsFlow
 ):
+    """SmartSlydr Cloud Custom Option Flow Handler Class."""
+
     def __init__(self, config_entry):
         """Initialize HACS options flow."""
         self.config_entry = config_entry
@@ -103,9 +105,11 @@ class SmartSlydrOptionsFlowHandler(
         self._data = {}
 
     async def async_step_init(self, user_input=None):
+        """Option flow for SmartSlydr Cloud Custom intialized by user."""
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
+        """Option flow for SmartSlydr Cloud Custom handler for user actions."""
         if user_input is not None:
             self._data = user_input
             return await self._update_options()
