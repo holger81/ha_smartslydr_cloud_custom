@@ -4,7 +4,7 @@
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
 
-_Integration to integrate with [integration_blueprint][integration_blueprint]._
+_Integration to integrate [Lycheethings SmartSlydr][lycheethings_smartslydr] devices with HomeAssistant._
 
 **This integration will set up the following platforms.**
 
@@ -43,11 +43,11 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 
 ## Thank you!
 
-This integration was only possible because of the great work by Jay Basen (https://github.com/jbasen/Crestron-SmartSlydr).
+This integration was only possible because of the great work done by Jay Basen (https://github.com/jbasen/Crestron-SmartSlydr).
 
 ***
 
-[integration_blueprint]: https://github.com/holger81/ha_smartslydr_cloud_custom
+[lycheethings_smartslydr]: https://lycheethings.com
 [commits-shield]: https://img.shields.io/github/commit-activity/y/holger81/ha_smartslydr_cloud_custom.svg?style=for-the-badge
 [commits]: https://github.com/holger81/ha_smartslydr_cloud_custom/commits/main
 [exampleimg]: example.png
