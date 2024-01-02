@@ -53,6 +53,6 @@ This integration was only possible because of the great work done by Jay Basen (
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/ludeeus/integration_blueprint.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/holger81/ha_smartslydr_cloud_custom.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/holger81/ha_smartslydr_cloud_custom.svg?style=for-the-badge
 [releases]: https://github.com/holger81/ha_smartslydr_cloud_custom/releases
