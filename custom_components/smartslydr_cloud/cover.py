@@ -15,7 +15,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    LOGGER.info(f"{DOMAIN} - {coordinator.data}")  # noqa: G004
+    LOGGER.debug(f"{DOMAIN} - {coordinator.data}")  # noqa: G004
     async_add_devices(
         SmartSlydrCover(
             hass= hass,
@@ -90,9 +90,8 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
                 self._roller.moving = 1
             else:
                 self._roller.moving = 0
-            self._roller.position = await self.hass.async_add_executor_job(
-                self.coordinator.api.getCurrentPosition, self._roller.device_id
-            )
+            self._roller.position = await self.coordinator.client.getCurrentPosition( self._roller.device_id)
+
         if self._roller.position == target_position:
             self._roller.moving = 0
 
@@ -127,9 +126,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
 
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.setPosition, self._roller.device_id, 100
-        )
+        await self.coordinator.client.setPosition( self._roller.device_id, 100)
 
         self._roller.moving = 1
 
@@ -140,9 +137,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
 
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.setPosition, self._roller.device_id, 0
-        )
+        await self.coordinator.client.setPosition(self._roller.device_id, 0)
         self._roller.moving = -1
 
         await self.hass.async_create_task(self._async_update_position(0))
@@ -150,8 +145,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.setPosition,
+        await self.coordinator.client.setPosition(
             self._roller.device_id,
             kwargs[ATTR_POSITION],
         )

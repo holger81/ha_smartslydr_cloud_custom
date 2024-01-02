@@ -78,7 +78,7 @@ class LycheeThingsApiClient:
 
     def Debug_Message(self, name: str, message: str) -> None:  # noqa: D102
         if self.debug:
-            LOGGER.info(f"{DOMAIN} - {name}: {message}")  # noqa: G004
+            LOGGER.debug(f"{DOMAIN} - {name}: {message}")  # noqa: G004
 
     ##****************************************************************************************
     #
@@ -294,7 +294,7 @@ class LycheeThingsApiClient:
         self.Debug_Message("setPosition", "URL: " + url)
         json = {"setcommands":[{"device_id": device_id ,"commands":[{"key":"position","value": str(position)}]}]}
 
-        self.Debug_Message("setPosition", "for device " + json)
+        self.Debug_Message("setPosition", "for device " + str(json))
 
         try:
             myheaders = self.headers
@@ -367,7 +367,9 @@ class LycheeThingsApiClient:
                     "Success - response.ContentString = " + await response.text(),
                 )
 
-                return response.json()["response"][0]["position"]
+                current_position = await response.json()
+
+                return current_position["response"][0]["position"]
 
         except Exception as ex:
             LOGGER.error(
