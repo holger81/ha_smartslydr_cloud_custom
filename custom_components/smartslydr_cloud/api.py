@@ -1,4 +1,10 @@
-"""LycheeThings API Client."""
+"""LycheeThings API Client.
+
+ This is a python version of the great work done by
+ Jay Basen (https://github.com/jbasen/Crestron-SmartSlydr) to integrate
+ Lycheethings SmartSlydr devices into HomeAssistant.
+
+"""
 from __future__ import annotations
 
 
@@ -7,7 +13,7 @@ import aiohttp
 
 from marshmallow_dataclass import dataclass  # noqa: D100
 from marshmallow import Schema
-from typing import ClassVar, Type
+from typing import ClassVar
 
 from .const import LOGGER, BASE_API_URL,DOMAIN
 
@@ -31,7 +37,7 @@ class SmartSlydrDevice:
     position: int
     error: str
     status: str
-    Schema: ClassVar[Type[Schema]] = Schema
+    Schema: ClassVar[type[Schema]] = Schema
 
 class LycheeThingsApiClientError(Exception):
     """Exception to indicate a general API error."""
@@ -58,7 +64,7 @@ class LycheeThingsApiClient:
         password: str,
         session: aiohttp.ClientSession,
     ) -> None:
-
+        """Initialize Class."""
         self.base_url = BASE_API_URL
         self.headers = HEADERS
         self.debug = True
@@ -71,7 +77,7 @@ class LycheeThingsApiClient:
         self._session = session
 
     def Debug_Message(self, name: str, message: str) -> None:  # noqa: D102
-        if self.debug == True:
+        if self.debug:
             LOGGER.info(f"{DOMAIN} - {name}: {message}")  # noqa: G004
 
     ##****************************************************************************************

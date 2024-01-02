@@ -14,13 +14,24 @@ Platform | Description
 
 ## Installation
 
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-1. If you do not have a `custom_components` directory (folder) there, you need to create it.
-1. In the `custom_components` directory (folder) create a new folder called `integration_blueprint`.
-1. Download _all_ the files from the `custom_components/integration_blueprint/` directory (folder) in this repository.
-1. Place the files you downloaded in the new directory (folder) you created.
-1. Restart Home Assistant
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Integration blueprint"
+### Pre-installation steps
+1. Navigate to https://my.home-assistant.io/ and make sure the Home Assistant Instance
+   is configured correctly to point to your local Home Assistant instance.
+2. Power on all your SmartSlydr devices.
+3. Turn **OFF** the wifi on your phone and make sure all the appliances are operational in the LycheeThings mobile app.
+
+### Installation
+1. The esiest way to install the integration is using HACS. Just click the
+   button bellow and follow the instructions:
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass)
+   Alternatively, go to Settings -> Devices & Services in Home Assistance and click the "Add Integration" button. Search for "SmartSlydr" and install it.
+2. Next you will be asked to provide the LycheeThings app credentials you
+   created erlier.
+3. Congratulations, you're done!
+   SmartSlydr Cloud will now start downloading the data for your
+   SmartSlydr devices and will add the entities for them to Home Assistant.
+   Note that the integration dynamically discoveres entities as they are made available by the API, so expect new entities to be added in the first few uses of the appliances.
+
 
 ## Configuration is done in the UI
 
@@ -29,6 +40,10 @@ Platform | Description
 ## Contributions are welcome!
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
+
+## Thank you!
+
+This integration was only possible because of the great work by Jay Basen (https://github.com/jbasen/Crestron-SmartSlydr).
 
 ***
 

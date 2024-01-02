@@ -26,7 +26,7 @@ class SmartSlydrBaseFlowHandler(config_entries.ConfigFlow):  # noqa: D101
             async_create_clientsession(self.hass),
         )
 
-        if await client.getSecurityTokens() == False:
+        if not await client.getSecurityTokens():
             return False  # noqa: PLE0101
         return client
 

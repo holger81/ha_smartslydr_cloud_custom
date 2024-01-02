@@ -8,6 +8,7 @@
   "dependencies": [],
   "documentation": "https://github.com/holger81/ha_smartslydr_cloud_custom",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/holger81/ha_smartslydr_cloud_custom/issues",
   "requirements": [
     "marshmallow-dataclass"
   ],
