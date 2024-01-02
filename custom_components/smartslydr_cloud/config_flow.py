@@ -104,7 +104,7 @@ class SmartSlydrOptionsFlowHandler(
         self._errors = {}
         self._data = {}
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self):
         """Option flow for SmartSlydr Cloud Custom intialized by user."""
         return await self.async_step_user()
 

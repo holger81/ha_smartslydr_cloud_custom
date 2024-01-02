@@ -9,11 +9,11 @@ from __future__ import annotations
 
 
 import traceback
+from typing import ClassVar
 import aiohttp
 
 from marshmallow_dataclass import dataclass  # noqa: D100
 from marshmallow import Schema
-from typing import ClassVar
 
 from .const import LOGGER, BASE_API_URL,DOMAIN
 
