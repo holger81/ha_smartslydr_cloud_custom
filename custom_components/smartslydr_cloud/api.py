@@ -15,7 +15,7 @@ import aiohttp
 from marshmallow_dataclass import dataclass  # noqa: D100
 from marshmallow import Schema
 
-from .const import LOGGER, BASE_API_URL,DOMAIN
+from .const import LOGGER, BASE_API_URL, DOMAIN
 
 HEADERS = {
     "Accept-Encoding": "gzip",
@@ -98,14 +98,19 @@ class LycheeThingsApiClient:
         self.Debug_Message("Get_Security_Tokens", "for user " + self.username)
 
         try:
-            myheaders = self.headers
-            myheaders["ContentType"] = "application/json"
-            myheaders["Accept"] = "*/*"
+            myheaders = {**self.headers, "Content-Type": "application/json", "Accept": "*/*"}
 
             response = await session.post(url, headers=myheaders, json=json)
 
+            if response.status in (401, 403):
+                self.Debug_Message(
+                    "Get_Security_Tokens",
+                    "Auth failed - response.status = " + str(response.status),
+                )
+                raise LycheeThingsApiClientAuthenticationError(
+                    "Invalid credentials"
+                )
             if (response.status < 200) or (response.status >= 300):
-                # server threw a error
                 self.Debug_Message(
                     "Get_Security_Tokens",
                     "Error - response.status = " + str(response.status),
@@ -113,8 +118,9 @@ class LycheeThingsApiClient:
                 self.Debug_Message(
                     "Get_Security_Tokens", "Error - response.text= " + await response.text()
                 )
-
-                return False
+                raise LycheeThingsApiClientCommunicationError(
+                    f"Server error: {response.status}"
+                )
 
             else:
                 self.Debug_Message(
@@ -136,13 +142,15 @@ class LycheeThingsApiClient:
 
                 return True
 
+        except LycheeThingsApiClientError:
+            raise
         except Exception as ex:
             LOGGER.error(
                 f"{DOMAIN} Exception in getSecurityTokens : %s - traceback: %s",  # noqa: G004
                 ex,
                 traceback.format_exc(),
             )
-        return False
+            raise LycheeThingsApiClientError(str(ex)) from ex
 
     ##****************************************************************************************
     #
@@ -160,15 +168,16 @@ class LycheeThingsApiClient:
         self.Debug_Message("refreshAccessToken", "URL: " + url)
 
         try:
-            myheaders = self.headers
-            myheaders["ContentType"] = "application/json"
-            myheaders["Access Token"] = self.access_token
-            myheaders["Accept"] = "*/*"
+            myheaders = {
+                **self.headers,
+                "Content-Type": "application/json",
+                "Authorization": self.access_token,
+                "Accept": "*/*",
+            }
 
             response = await session.post(url, headers=myheaders, json=json)
 
             if (response.status < 200) or (response.status >= 300):
-                # server threw a error
                 self.Debug_Message(
                     "refreshAccessToken",
                     "Error - response.status = " + str(response.status),
@@ -176,8 +185,9 @@ class LycheeThingsApiClient:
                 self.Debug_Message(
                     "refreshAccessToken", "Error - response.text= " + await response.text()
                 )
-
-                return False
+                raise LycheeThingsApiClientCommunicationError(
+                    f"Token refresh failed: {response.status}"
+                )
 
             else:
                 # self.Debug_Message(
@@ -194,13 +204,15 @@ class LycheeThingsApiClient:
 
                 return True
 
+        except LycheeThingsApiClientError:
+            raise
         except Exception as ex:
             LOGGER.error(
                 f"{DOMAIN} Exception in refreshAccessToken : %s - traceback: %s",  # noqa: G004
                 ex,
                 traceback.format_exc(),
             )
-        return False
+            raise LycheeThingsApiClientError(str(ex)) from ex
 
     # ****************************************************************************************
     #
@@ -219,15 +231,16 @@ class LycheeThingsApiClient:
         self.Debug_Message("GetDevicesList", "URL: " + url)
 
         try:
-            myheaders = self.headers
-            myheaders["ContentType"] = "application/json"
-            myheaders["Authorization"] = self.access_token
-            myheaders["Accept"] = "*/*"
+            myheaders = {
+                **self.headers,
+                "Content-Type": "application/json",
+                "Authorization": self.access_token,
+                "Accept": "*/*",
+            }
 
             response = await session.get(url, headers=myheaders)
 
             if (response.status < 200) or (response.status >= 300):
-                # server threw a error
                 self.Debug_Message(
                     "getDeviceList",
                     "Error - response.status = " + str(response.status),
@@ -235,8 +248,9 @@ class LycheeThingsApiClient:
                 self.Debug_Message(
                     "getDeviceList", "Error - response.text= " + await response.text()
                 )
-
-                return False
+                raise LycheeThingsApiClientCommunicationError(
+                    f"getDeviceList failed: {response.status}"
+                )
 
             else:
                 self.Debug_Message(
@@ -265,13 +279,15 @@ class LycheeThingsApiClient:
 
                 return Devices
 
+        except LycheeThingsApiClientError:
+            raise
         except Exception as ex:
             LOGGER.error(
-                f"{DOMAIN} Exception in refreshAccessToken : %s - traceback: %s",  # noqa: G004
+                f"{DOMAIN} Exception in getDeviceList : %s - traceback: %s",  # noqa: G004
                 ex,
                 traceback.format_exc(),
             )
-        return False
+            raise LycheeThingsApiClientError(str(ex)) from ex
 
     # ****************************************************************************************
     #
@@ -297,10 +313,12 @@ class LycheeThingsApiClient:
         self.Debug_Message("setPosition", "for device " + str(json))
 
         try:
-            myheaders = self.headers
-            myheaders["ContentType"] = "application/json"
-            myheaders["Authorization"] = self.access_token
-            myheaders["Accept"] = "*/*"
+            myheaders = {
+                **self.headers,
+                "Content-Type": "application/json",
+                "Authorization": self.access_token,
+                "Accept": "*/*",
+            }
 
             response = await session.post(url, headers=myheaders, json=json)
 
@@ -344,10 +362,12 @@ class LycheeThingsApiClient:
         json = {"commands":[{"device_id": device_id ,"command": "position"}]}
 
         try:
-            myheaders = self.headers
-            myheaders["ContentType"] = "application/json"
-            myheaders["Authorization"] = self.access_token
-            myheaders["Accept"] = "*/*"
+            myheaders = {
+                **self.headers,
+                "Content-Type": "application/json",
+                "Authorization": self.access_token,
+                "Accept": "*/*",
+            }
 
             response = await session.post(url, headers=myheaders, json=json)
 
