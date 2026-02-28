@@ -9,9 +9,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 
-from .api import LycheeThingsApiClient
+from .api import (
+    LycheeThingsApiClient,
+    LycheeThingsApiClientAuthenticationError,
+    LycheeThingsApiClientError,
+)
 from .const import DOMAIN, CONF_SYNC_INTERVAL, DEFAULT_SYNC_INTERVAL
 from .coordinator import SmartSlydrCloudUpdateCoordinator
 
@@ -34,12 +38,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             session=async_get_clientsession(hass),
         )
 
-    await client.getSecurityTokens()
+    try:
+        await client.getSecurityTokens()
+    except LycheeThingsApiClientAuthenticationError as err:
+        raise ConfigEntryAuthFailed(err) from err
+    except LycheeThingsApiClientError as err:
+        raise ConfigEntryNotReady(err) from err
 
     hass.data[DOMAIN][entry.entry_id] = coordinator = SmartSlydrCloudUpdateCoordinator(
         hass=hass,
-        client= client,
-        update_interval= sync_interval,
+        client=client,
+        update_interval=sync_interval,
     )
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
     await coordinator.async_config_entry_first_refresh()
