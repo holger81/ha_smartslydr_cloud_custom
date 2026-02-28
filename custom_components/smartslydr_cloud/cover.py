@@ -62,8 +62,8 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
             + str(self.coordinator.data)
         )
 
-        # As we generate moving and have two separate update functions working,
-        # we go at updating like this, value by value
+        # Update from coordinator; position only changes when movement has stopped
+        # and the API returns new data
         self._roller.error = self.coordinator.data[self._roller.device_id].error
         self._roller.position = self.coordinator.data[self._roller.device_id].position
         self._roller.temperature = self.coordinator.data[
@@ -74,6 +74,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
             self._roller.device_id
         ].wlansignal
         self._roller.status = self.coordinator.data[self._roller.device_id].status
+        self._roller.moving = 0
 
     # This property is important to let HA know if this entity is online or not.
     # If an entity is offline (return False), the UI will reflect this.
@@ -81,21 +82,6 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
     def available(self) -> bool:
         """Return True if device is available."""
         return self._roller.status == "device is online"
-
-    async def _async_update_position(self, target_position):
-        max_polls = 120  # ~2 min at 1s polling
-        for _ in range(max_polls):
-            if self._roller.position == target_position:
-                self._roller.moving = 0
-                return
-            if self._roller.position > target_position:
-                self._roller.moving = -1
-            else:
-                self._roller.moving = 1
-            self._roller.position = await self.coordinator.client.getCurrentPosition(
-                self._roller.device_id
-            )
-        self._roller.moving = 0
 
     # The following properties are how HA knows the current state of the device.
     @property
@@ -106,7 +92,6 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed, same as position 0."""
-        self._roller.moving = 0
         return self._roller.position == 0
 
     @property
@@ -121,45 +106,30 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
 
     @property
     def should_poll(self) -> bool:  # noqa: D102
-        return True
+        return False
 
-    # # These methods allow HA to tell the actual device what to do. In this case, move
-    # # the cover to the desired position, or open and close it all the way.
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-
-        await self.coordinator.client.setPosition( self._roller.device_id, 100)
-
+        await self.coordinator.client.setPosition(self._roller.device_id, 100)
         self._roller.moving = 1
-
-        await self.hass.async_create_task(self._async_update_position(100))
-
-    # await self._roller.set_position(100)
+        await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-
         await self.coordinator.client.setPosition(self._roller.device_id, 0)
         self._roller.moving = -1
-
-        await self.hass.async_create_task(self._async_update_position(0))
-        # await self._roller.set_position(0)
+        await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Close the cover."""
+        """Set the cover to a specific position."""
         await self.coordinator.client.setPosition(
             self._roller.device_id,
             kwargs[ATTR_POSITION],
         )
-
         if self._roller.position > kwargs[ATTR_POSITION]:
             self._roller.moving = -1
         elif self._roller.position < kwargs[ATTR_POSITION]:
             self._roller.moving = 1
         else:
             self._roller.moving = 0
-
-        await self.hass.async_create_task(
-            self._async_update_position(kwargs[ATTR_POSITION])
-        )
-        # await self._roller.set_position(kwargs[ATTR_POSITION])
+        await self.coordinator.async_request_refresh()
