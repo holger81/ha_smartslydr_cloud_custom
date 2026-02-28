@@ -29,7 +29,7 @@ class SmartSlydrCloudUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         client: LycheeThingsApiClient,
-        update_interval : int
+        update_interval: int,
     ) -> None:
         """Initialize."""
         self.client = client

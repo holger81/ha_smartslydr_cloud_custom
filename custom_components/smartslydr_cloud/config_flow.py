@@ -17,17 +17,17 @@ from .api import (
 from .const import DOMAIN, LOGGER
 
 class SmartSlydrBaseFlowHandler(config_entries.ConfigFlow):  # noqa: D101
-    async def _test_credentials(self, username: str, password: str) -> None:
-        """Validate credentials."""
-        client =  LycheeThingsApiClient(
+    async def _test_credentials(self, username: str, password: str) -> bool:
+        """Validate credentials. Returns True if valid, False otherwise."""
+        client = LycheeThingsApiClient(
             username,
             password,
             async_create_clientsession(self.hass),
         )
 
         if not await client.getSecurityTokens():
-            return False  # noqa: PLE0101
-        return client
+            return False
+        return True
 
     # Options Flow
     @staticmethod
@@ -50,10 +50,16 @@ class SmartSlydrFlowHandler(SmartSlydrBaseFlowHandler, domain=DOMAIN):
         _errors = {}
         if user_input is not None:
             try:
-                await self._test_credentials(
+                if not await self._test_credentials(
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
-                )
+                ):
+                    _errors["base"] = "auth"
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_USERNAME],
+                        data=user_input,
+                    )
             except LycheeThingsApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
@@ -63,11 +69,6 @@ class SmartSlydrFlowHandler(SmartSlydrBaseFlowHandler, domain=DOMAIN):
             except LycheeThingsApiClientError as exception:
                 LOGGER.exception(exception)
                 _errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input,
-                )
 
         return self.async_show_form(
             step_id="user",
@@ -98,14 +99,14 @@ class SmartSlydrOptionsFlowHandler(
     """SmartSlydr Cloud Custom Option Flow Handler Class."""
 
     def __init__(self, config_entry):
-        """Initialize HACS options flow."""
+        """Initialize SmartSlydr options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
         self._errors = {}
         self._data = {}
 
     async def async_step_init(self):
-        """Option flow for SmartSlydr Cloud Custom intialized by user."""
+        """Option flow for SmartSlydr Cloud Custom initialized by user."""
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
@@ -128,15 +129,23 @@ class SmartSlydrOptionsFlowHandler(
 
     async def _update_options(self):
         """Update config entry options."""
-        valid = await self._test_credentials(
-            self._data[CONF_USERNAME],
-            self._data[CONF_PASSWORD],
-        )
-        if valid:
-            return self.async_create_entry(
-                title=self.config_entry.data.get(CONF_USERNAME), data=self._data
+        try:
+            valid = await self._test_credentials(
+                self._data[CONF_USERNAME],
+                self._data[CONF_PASSWORD],
             )
-
-        else:
+            if valid:
+                return self.async_create_entry(
+                    title=self.config_entry.data.get(CONF_USERNAME), data=self._data
+                )
             self._errors["base"] = "invalid_credentials"
-            return await self.async_step_user()
+        except LycheeThingsApiClientAuthenticationError as exception:
+            LOGGER.warning(exception)
+            self._errors["base"] = "invalid_credentials"
+        except LycheeThingsApiClientCommunicationError as exception:
+            LOGGER.error(exception)
+            self._errors["base"] = "connection"
+        except LycheeThingsApiClientError as exception:
+            LOGGER.exception(exception)
+            self._errors["base"] = "unknown"
+        return await self.async_step_user()
