@@ -21,16 +21,16 @@ Platform | Description
 3. Turn **OFF** the wifi on your phone and make sure all the appliances are operational in the LycheeThings mobile app.
 
 ### Installation
-1. The esiest way to install the integration is using HACS. Just click the
-   button bellow and follow the instructions:
-   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass)
-   Alternatively, go to Settings -> Devices & Services in Home Assistance and click the "Add Integration" button. Search for "SmartSlydr" and install it.
+1. The easiest way to install the integration is using HACS. Just click the
+   button below and follow the instructions:
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=holger81&repository=ha_smartslydr_cloud_custom)
+   Alternatively, go to Settings -> Devices & Services in Home Assistant and click the "Add Integration" button. Search for "SmartSlydr" and install it.
 2. Next you will be asked to provide the LycheeThings app credentials you
-   created erlier.
+   created earlier.
 3. Congratulations, you're done!
    SmartSlydr Cloud will now start downloading the data for your
    SmartSlydr devices and will add the entities for them to Home Assistant.
-   Note that the integration dynamically discoveres entities as they are made available by the API, so expect new entities to be added in the first few uses of the appliances.
+   Note that the integration dynamically discovers entities as they are made available by the API, so expect new entities to be added in the first few uses of the appliances.
 
 
 ## Configuration is done in the UI
