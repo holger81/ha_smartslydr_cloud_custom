@@ -90,6 +90,9 @@ class SmartSlydrFlowHandler(SmartSlydrBaseFlowHandler, domain=DOMAIN):
                 }
             ),
             errors=_errors,
+            description_placeholders={
+                "url": "https://github.com/holger81/ha_smartslydr_cloud_custom",
+            },
         )
 
 

@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/holger81/ha_smartslydr_cloud_custom",
+                "description": "If you need help with the configuration have a look here: {url}",
                 "data": {
                     "username": "Username",
                     "password": "Password"
