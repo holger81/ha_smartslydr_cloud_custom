@@ -75,6 +75,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         ].wlansignal
         self._roller.status = self.coordinator.data[self._roller.device_id].status
         self._roller.moving = 0
+        self.async_write_ha_state()
 
     # This property is important to let HA know if this entity is online or not.
     # If an entity is offline (return False), the UI will reflect this.
@@ -112,12 +113,14 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         """Open the cover."""
         await self.coordinator.client.setPosition(self._roller.device_id, 100)
         self._roller.moving = 1
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.client.setPosition(self._roller.device_id, 0)
         self._roller.moving = -1
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -132,4 +135,5 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
             self._roller.moving = 1
         else:
             self._roller.moving = 0
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
