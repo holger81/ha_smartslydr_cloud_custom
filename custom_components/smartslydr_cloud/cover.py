@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from homeassistant.components.cover import CoverEntity, CoverDeviceClass, CoverEntityFeature, ATTR_POSITION
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from typing import Any
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, NAME, VERSION
 from .coordinator import SmartSlydrCloudUpdateCoordinator
 from .entity import SmartSlydrEntity
 
@@ -51,7 +52,13 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         self._roller.moving = 0
         self.hass = hass
 
-
+        # Use window/cover name as device headline in HA (e.g. "Jonathans Room")
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._roller.devicename,
+            model=VERSION,
+            manufacturer=NAME,
+        )
         self._attr_name = self._roller.devicename
 
     @callback
