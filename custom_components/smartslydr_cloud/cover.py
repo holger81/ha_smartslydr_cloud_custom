@@ -62,19 +62,18 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
             + str(self.coordinator.data)
         )
 
-        # Update from coordinator; position only changes when movement has stopped
-        # and the API returns new data
-        self._roller.error = self.coordinator.data[self._roller.device_id].error
-        self._roller.position = self.coordinator.data[self._roller.device_id].position
-        self._roller.temperature = self.coordinator.data[
-            self._roller.device_id
-        ].temperature
-        self._roller.humidity = self.coordinator.data[self._roller.device_id].humidity
-        self._roller.wlansignal = self.coordinator.data[
-            self._roller.device_id
-        ].wlansignal
-        self._roller.status = self.coordinator.data[self._roller.device_id].status
-        self._roller.moving = 0
+        old_position = self._roller.position
+        data = self.coordinator.data[self._roller.device_id]
+        self._roller.error = data.error
+        self._roller.position = data.position
+        self._roller.temperature = data.temperature
+        self._roller.humidity = data.humidity
+        self._roller.wlansignal = data.wlansignal
+        self._roller.status = data.status
+        # Only clear moving when position actually changed (real update from device).
+        # Avoids stale refresh right after open/close overwriting state to "closed".
+        if data.position != old_position:
+            self._roller.moving = 0
         self.async_write_ha_state()
 
     # This property is important to let HA know if this entity is online or not.
@@ -113,6 +112,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         """Open the cover."""
         await self.coordinator.client.setPosition(self._roller.device_id, 100)
         self._roller.moving = 1
+        self._roller.position = 100  # Optimistic: show open until API catches up
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
@@ -120,20 +120,20 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         """Close the cover."""
         await self.coordinator.client.setPosition(self._roller.device_id, 0)
         self._roller.moving = -1
+        self._roller.position = 0  # Optimistic: show closed until API catches up
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
-        await self.coordinator.client.setPosition(
-            self._roller.device_id,
-            kwargs[ATTR_POSITION],
-        )
-        if self._roller.position > kwargs[ATTR_POSITION]:
+        target = kwargs[ATTR_POSITION]
+        await self.coordinator.client.setPosition(self._roller.device_id, target)
+        if self._roller.position > target:
             self._roller.moving = -1
-        elif self._roller.position < kwargs[ATTR_POSITION]:
+        elif self._roller.position < target:
             self._roller.moving = 1
         else:
             self._roller.moving = 0
+        self._roller.position = target  # Optimistic: show target until API catches up
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
