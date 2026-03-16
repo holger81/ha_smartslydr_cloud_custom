@@ -51,6 +51,8 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         # Create "moving" information
         self._roller.moving = 0
         self.hass = hass
+        self._target_position: int | None = None  # target when moving; used to ignore stale API data
+        self._refresh_timer_handle = None  # cancel delayed refresh on new action
 
         # Use window/cover name as device headline in HA (e.g. "Jonathans Room")
         self._attr_device_info = DeviceInfo(
@@ -72,14 +74,31 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         old_position = self._roller.position
         data = self.coordinator.data[self._roller.device_id]
         self._roller.error = data.error
-        self._roller.position = data.position
         self._roller.temperature = data.temperature
         self._roller.humidity = data.humidity
         self._roller.wlansignal = data.wlansignal
         self._roller.status = data.status
-        # Only clear moving when position actually changed (real update from device).
-        # Avoids stale refresh right after open/close overwriting state to "closed".
-        if data.position != old_position:
+
+        # While moving, ignore stale API position (e.g. still 0 right after Open).
+        # Only accept position when it matches or passes our target.
+        if self._roller.moving != 0 and self._target_position is not None:
+            new_pos = data.position
+            if self._roller.moving > 0:  # opening
+                if new_pos >= self._target_position or new_pos > old_position:
+                    self._roller.position = new_pos
+                    if new_pos >= self._target_position:
+                        self._roller.moving = 0
+                        self._target_position = None
+                # else: keep current position and moving (stale response)
+            else:  # closing
+                if new_pos <= self._target_position or new_pos < old_position:
+                    self._roller.position = new_pos
+                    if new_pos <= self._target_position:
+                        self._roller.moving = 0
+                        self._target_position = None
+                # else: keep current position and moving (stale response)
+        else:
+            self._roller.position = data.position
             self._roller.moving = 0
         self.async_write_ha_state()
 
@@ -115,32 +134,52 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
     def should_poll(self) -> bool:  # noqa: D102
         return False
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel pending refresh when entity is removed."""
+        if self._refresh_timer_handle:
+            self._refresh_timer_handle.cancel()
+            self._refresh_timer_handle = None
+
+    def _schedule_refresh_after_move(self, delay_seconds: float = 10.0) -> None:
+        """Refresh from API once the move has had time to finish."""
+        if self._refresh_timer_handle:
+            self._refresh_timer_handle.cancel()
+        self._refresh_timer_handle = self.hass.loop.call_later(
+            delay_seconds,
+            lambda: self.hass.async_create_task(
+                self.coordinator.async_request_refresh()
+            ),
+        )
+
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.coordinator.client.setPosition(self._roller.device_id, 100)
         self._roller.moving = 1
-        self._roller.position = 100  # Optimistic: show open until API catches up
+        self._target_position = 100
+        self._roller.position = 100  # Optimistic
         self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+        self._schedule_refresh_after_move()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.client.setPosition(self._roller.device_id, 0)
         self._roller.moving = -1
-        self._roller.position = 0  # Optimistic: show closed until API catches up
+        self._target_position = 0
+        self._roller.position = 0  # Optimistic
         self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+        self._schedule_refresh_after_move()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
         target = kwargs[ATTR_POSITION]
         await self.coordinator.client.setPosition(self._roller.device_id, target)
+        self._target_position = target
         if self._roller.position > target:
             self._roller.moving = -1
         elif self._roller.position < target:
             self._roller.moving = 1
         else:
             self._roller.moving = 0
-        self._roller.position = target  # Optimistic: show target until API catches up
+        self._roller.position = target  # Optimistic
         self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+        self._schedule_refresh_after_move()

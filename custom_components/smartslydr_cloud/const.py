@@ -22,8 +22,9 @@ if _manifest_path.exists():
 else:
     INTEGRATION_VERSION = "0.0.1"
 
-# Device model shown in HA: "SmartSlydr Custom (v0.0.8)"
-DEVICE_MODEL = f"SmartSlydr Custom (v{INTEGRATION_VERSION})"
+# Device model shown in HA: "SmartSlydr Custom (v0.0.9)" (strip leading v from manifest)
+_version = INTEGRATION_VERSION.lstrip("v")
+DEVICE_MODEL = f"SmartSlydr Custom (v{_version})"
 ATTRIBUTION = "Custom Integration for LycheeThings SmartSlydr Devices"
 
 BASE_API_URL = "https://34yl6ald82.execute-api.us-east-2.amazonaws.com/prod/"
