@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from typing import Any
 
-from .const import DOMAIN, LOGGER, NAME, VERSION
+from .const import DOMAIN, LOGGER, NAME, DEVICE_MODEL
 from .coordinator import SmartSlydrCloudUpdateCoordinator
 from .entity import SmartSlydrEntity
 
@@ -56,7 +56,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._roller.devicename,
-            model=VERSION,
+            model=DEVICE_MODEL,
             manufacturer=NAME,
         )
         self._attr_name = self._roller.devicename
