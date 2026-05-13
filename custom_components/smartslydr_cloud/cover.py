@@ -63,6 +63,21 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         )
         self._attr_name = self._roller.devicename
 
+    def _arrived_at_target(self, new_pos: int) -> bool:
+        """True when API position matches commanded target (handles partial moves)."""
+        if self._target_position is None:
+            return True
+        t = self._target_position
+        if self._roller.moving > 0:  # opening toward t
+            if t >= 99:
+                return new_pos >= 95
+            return new_pos >= t
+        # closing toward t
+        if t <= 1:
+            return new_pos <= 5
+        # partial close: near target, or device reports fully closed
+        return abs(new_pos - t) <= 5 or new_pos == 0
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -80,23 +95,42 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         self._roller.status = data.status
 
         # While moving, ignore stale API position (e.g. still 0 right after Open).
-        # Only accept position when it matches or passes our target.
+        # Accept real progress; complete only when truly at target (partial ≠ full close).
         if self._roller.moving != 0 and self._target_position is not None:
             new_pos = data.position
-            if self._roller.moving > 0:  # opening
-                if new_pos >= self._target_position or new_pos > old_position:
+            t = self._target_position
+            if self._roller.moving > 0:  # opening toward t
+                stale_open = new_pos == 0 and old_position > 0 and t > 0
+                if stale_open:
+                    pass
+                elif new_pos >= t:
                     self._roller.position = new_pos
-                    if new_pos >= self._target_position:
+                    self._roller.moving = 0
+                    self._target_position = None
+                elif new_pos > old_position:
+                    self._roller.position = new_pos
+                    if self._arrived_at_target(new_pos):
                         self._roller.moving = 0
                         self._target_position = None
-                # else: keep current position and moving (stale response)
-            else:  # closing
-                if new_pos <= self._target_position or new_pos < old_position:
+                elif (
+                    old_position >= t
+                    and 0 < new_pos < old_position
+                    and new_pos <= t
+                ):
+                    # API refines below optimistic target (e.g. 15 vs optimistic 20)
                     self._roller.position = new_pos
-                    if new_pos <= self._target_position:
+                    if self._arrived_at_target(new_pos):
                         self._roller.moving = 0
                         self._target_position = None
-                # else: keep current position and moving (stale response)
+            else:  # closing toward t
+                stale_close = new_pos >= 99 and old_position < 99 and t < 99
+                if stale_close:
+                    pass
+                elif new_pos < old_position:
+                    self._roller.position = new_pos
+                    if self._arrived_at_target(new_pos):
+                        self._roller.moving = 0
+                        self._target_position = None
         else:
             self._roller.position = data.position
             self._roller.moving = 0
@@ -119,6 +153,15 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
     def is_closed(self) -> bool:
         """Return if the cover is closed, same as position 0."""
         return self._roller.position == 0
+
+    @property
+    def is_open(self) -> bool:
+        """Return True for any position above 0 (partially open counts as open).
+
+        Home Assistant's default is often only fully open (100%); for windows we
+        treat any non-zero position as open.
+        """
+        return self._roller.position > 0
 
     @property
     def is_closing(self) -> bool:
