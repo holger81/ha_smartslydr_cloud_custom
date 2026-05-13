@@ -64,7 +64,7 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
         self._attr_name = self._roller.devicename
 
     def _arrived_at_target(self, new_pos: int) -> bool:
-        """True when API position matches commanded target (handles partial moves)."""
+        """Return whether the API position matches the commanded target (handles partial moves)."""
         if self._target_position is None:
             return True
         t = self._target_position
