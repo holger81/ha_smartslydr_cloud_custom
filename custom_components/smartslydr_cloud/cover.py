@@ -126,6 +126,11 @@ class SmartSlydrCover(SmartSlydrEntity, CoverEntity):  # noqa: D101
                 stale_close = new_pos >= 99 and old_position < 99 and t < 99
                 if stale_close:
                     pass
+                elif self._arrived_at_target(new_pos):
+                    # e.g. optimistic position already 0 and API confirms closed
+                    self._roller.position = new_pos
+                    self._roller.moving = 0
+                    self._target_position = None
                 elif new_pos < old_position:
                     self._roller.position = new_pos
                     if self._arrived_at_target(new_pos):
