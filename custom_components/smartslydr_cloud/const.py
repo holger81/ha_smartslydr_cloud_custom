@@ -36,4 +36,8 @@ CONF_SYNC_INTERVAL = "sync_interval"
 
 DEFAULT_SYNC_INTERVAL = 60  # seconds
 
+# Watchdog: if a move is still "in progress" in HA after this many seconds,
+# trust the latest API position and leave the opening/closing state.
+MAX_MOVE_SECONDS = 600
+
 LOGGER: Logger = getLogger(__package__)

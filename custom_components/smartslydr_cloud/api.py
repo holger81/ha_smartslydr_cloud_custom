@@ -300,7 +300,9 @@ class LycheeThingsApiClient:
             self.Debug_Message(
                 "setPosition", "Error - Position out of range: " + str(position)
             )
-            return
+            raise LycheeThingsApiClientError(
+                f"Position out of range: {position}"
+            )
 
         session = self._session
         await self.refreshAccessToken()
@@ -331,6 +333,9 @@ class LycheeThingsApiClient:
                 self.Debug_Message(
                     "setPosition", "Error - response.text= " + await response.text()
                 )
+                raise LycheeThingsApiClientCommunicationError(
+                    f"setPosition failed: {response.status}"
+                )
 
             else:
                 self.Debug_Message(
@@ -338,12 +343,15 @@ class LycheeThingsApiClient:
                     "Success - response.ContentString = " + await response.text(),
                 )
 
+        except LycheeThingsApiClientError:
+            raise
         except Exception as ex:
             LOGGER.error(
                 f"{DOMAIN} Exception in setPosition : %s - traceback: %s",  # noqa: G004
                 ex,
                 traceback.format_exc(),
             )
+            raise LycheeThingsApiClientError(str(ex)) from ex
 
 
     # ****************************************************************************************
