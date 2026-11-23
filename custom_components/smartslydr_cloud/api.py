@@ -13,7 +13,7 @@ from typing import ClassVar
 import aiohttp
 
 from marshmallow_dataclass import dataclass  # noqa: D100
-from marshmallow import Schema
+from marshmallow import EXCLUDE, Schema
 
 from .const import LOGGER, BASE_API_URL, DOMAIN
 
@@ -38,6 +38,11 @@ class SmartSlydrDevice:
     error: str
     status: str
     Schema: ClassVar[type[Schema]] = Schema
+
+    class Meta:
+        """Ignore extra fields the LycheeThings cloud may add to payloads."""
+
+        unknown = EXCLUDE
 
 class LycheeThingsApiClientError(Exception):
     """Exception to indicate a general API error."""
